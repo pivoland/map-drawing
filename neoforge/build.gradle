@@ -83,15 +83,19 @@ publishMods {
     file = jar.archiveFile
     modLoaders.add('neoforge')
 
-    modrinth {
-        accessToken = mapwrightPushTokenModrinth
-        projectId = "iDYmMWwn"
-        minecraftVersions.add(minecraft_version)
+    if (project.hasProperty("mapwrightPushTokenModrinth")) {
+        modrinth {
+            accessToken = project.property("mapwrightPushTokenModrinth")
+            projectId = "iDYmMWwn"
+            minecraftVersions.add(minecraft_version)
+        }
     }
 
-    curseforge {
-        accessToken = mapwrightPushTokenCurse
-        projectId = "1361711"
-        minecraftVersions.add(minecraft_version)
+    if (project.hasProperty("mapwrightPushTokenCurse")) {
+        curseforge {
+            accessToken = project.property("mapwrightPushTokenCurse")
+            projectId = "1361711"
+            minecraftVersions.add(minecraft_version)
+        }
     }
 }
