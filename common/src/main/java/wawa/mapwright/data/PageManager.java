@@ -8,6 +8,7 @@ import org.joml.Vector2dc;
 import org.joml.Vector2i;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.data.history.OperationHistory;
+import wawa.mapwright.platform.MapWrightServices;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -258,7 +259,9 @@ public class PageManager {
     public void reloadPageIO(final Level level, final Minecraft client) {
         this.pageIO = new PageIO(level, client);
         this.pins.clear();
-        this.pins.putAll(this.pageIO.readPins());
+        if (!MapWrightServices.PLATFORM.disablePinPersistence()) {
+            this.pins.putAll(this.pageIO.readPins());
+        }
     }
 
     private int cleanupTimer = 0;
@@ -294,7 +297,9 @@ public class PageManager {
             for (final AbstractPage page : this.pages.values()) {
                 page.save(this.pageIO, close);
             }
-            this.pageIO.savePins(this.pins);
+            if (!MapWrightServices.PLATFORM.disablePinPersistence()) {
+                this.pageIO.savePins(this.pins);
+            }
         }
     }
 

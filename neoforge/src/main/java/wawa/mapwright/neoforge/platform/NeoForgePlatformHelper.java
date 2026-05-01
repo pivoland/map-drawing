@@ -26,4 +26,9 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     public boolean isRunningDatagen() {
         return DatagenModLoader.isRunningDataGen();
     }
+
+    @Override
+    public boolean disablePinPersistence() {
+        return true;
+    }
 }

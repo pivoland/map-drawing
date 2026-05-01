@@ -26,6 +26,10 @@ public interface IPlatformHelper {
 
     boolean isRunningDatagen();
 
+    default boolean disablePinPersistence() {
+        return false;
+    }
+
     /**
      * Gets the name of the environment type as a string.
      *
