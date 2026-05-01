@@ -24,6 +24,7 @@ public class DrawTool extends Tool {
     protected int r = 0;
     private static final ResourceLocation id = MapwrightClient.id("draw");
     private static DynamicTexture preview = new DynamicTexture(1, 1, false);
+    private long activeStrokeId = -1L;
     static {
         // crashes the game if this class is loaded too early. boowomp
         preview.getPixels().setPixelRGBA(0, 0, 0xFF000000);
@@ -74,22 +75,31 @@ public class DrawTool extends Tool {
 
     public void putSquare(final PageManager activePage, final Vector2ic pos, final int targetColor) {
         activePage.startSnapshot();
-        activePage.putSquare(pos.x(), pos.y(), targetColor, this.r);
+        final String authorId = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "";
+        activePage.putSquare(pos.x(), pos.y(), targetColor, this.r, authorId, this.activeStrokeId);
     }
 
     public void removeSquare(final PageManager activePage, final Vector2ic pos, final int targetColor) {
         activePage.startSnapshot();
-        activePage.putSquare(pos.x(), pos.y(), targetColor, this.r);
+        final String authorId = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "";
+        activePage.putSquare(pos.x(), pos.y(), targetColor, this.r, authorId, this.activeStrokeId);
+    }
+
+    @Override
+    public void mouseDown(final PageManager activePage, final MapWidget.MouseType mouseType, final Vector2d world) {
+        this.activeStrokeId = System.nanoTime();
     }
 
     @Override
     public void mouseRelease(final PageManager activePage, final MapWidget.MouseType mouseType, final Vector2d world) {
         activePage.endSnapshot();
+        this.activeStrokeId = -1L;
     }
 
     private void pixelLine(final Vector2d point1, final Vector2d point2, final Consumer<Vector2i> perPixel) {
         final Vector2d delta = new Vector2d(point1).sub(point2);
-        final int steps = (int) Math.max(1, Math.ceil(Math.max(Math.abs(delta.x), Math.abs(delta.y))));
+        final double density = Math.max(1d, (this.r + 1) * 0.5d);
+        final int steps = (int) Math.max(1, Math.ceil(Math.max(Math.abs(delta.x), Math.abs(delta.y)) * density));
         delta.div(steps);
         final Vector2d pos = new Vector2d(point2);
         for (int i = 0; i < steps + 1; i++) {

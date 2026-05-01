@@ -17,6 +17,7 @@ public record MapSyncPayload(List<MapSyncOperation> operations) implements Custo
             ByteBufCodecs.VAR_INT, MapSyncOperation::x,
             ByteBufCodecs.VAR_INT, MapSyncOperation::y,
             ByteBufCodecs.INT, MapSyncOperation::rgba,
+            ByteBufCodecs.INT, MapSyncOperation::previousRgba,
             ByteBufCodecs.STRING_UTF8, MapSyncOperation::authorId,
             ByteBufCodecs.VAR_LONG, MapSyncOperation::strokeId,
             MapSyncOperation::new

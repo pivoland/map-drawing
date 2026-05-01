@@ -12,10 +12,10 @@ public final class MapSyncBridge {
 
     private MapSyncBridge() {}
 
-    public static synchronized void queueLocalOperation(final int x, final int y, final int rgba, final String authorId, final long strokeId) {
+    public static synchronized void queueLocalOperation(final int x, final int y, final int rgba, final int previousRgba, final String authorId, final long strokeId) {
         if (applyingRemote) return;
         if (pending.size() >= MAX_BATCH_SIZE) pending.remove(0);
-        pending.add(new MapSyncOperation(x, y, rgba, authorId, strokeId));
+        pending.add(new MapSyncOperation(x, y, rgba, previousRgba, authorId, strokeId));
     }
 
     public static synchronized List<MapSyncOperation> drainPending(final int maxCount) {
