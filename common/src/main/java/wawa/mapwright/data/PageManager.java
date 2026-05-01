@@ -9,6 +9,7 @@ import org.joml.Vector2i;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.data.history.OperationHistory;
 import wawa.mapwright.data.sync.MapSyncBridge;
+import wawa.mapwright.data.sync.PinSyncBridge;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -80,6 +81,23 @@ public class PageManager {
         }
     }
 
+
+    private void queueImageDiff(final int rx, final int ry, final NativeImage before, final NativeImage after) {
+        final String authorId = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "";
+        final long strokeId = System.nanoTime();
+        for (int x = 0; x < MapwrightClient.CHUNK_SIZE; x++) {
+            for (int y = 0; y < MapwrightClient.CHUNK_SIZE; y++) {
+                final int prev = before.getPixelRGBA(x, y);
+                final int next = after.getPixelRGBA(x, y);
+                if (prev != next) {
+                    final int wx = rx * MapwrightClient.CHUNK_SIZE + x;
+                    final int wy = ry * MapwrightClient.CHUNK_SIZE + y;
+                    MapSyncBridge.queueLocalOperation(wx, wy, next, prev, authorId, strokeId);
+                }
+            }
+        }
+    }
+
     public void undoChanges() {
         if (!this.pastHistories.empty() && this.state == SnapshotState.IDLE) { //make sure we can't undo while we are currently modifying pages)
             final OperationHistory recentHistory = this.pastHistories.pop();
@@ -87,7 +105,11 @@ public class PageManager {
 
             for (final Map.Entry<Vector2i, NativeImage> entry : recentHistory.pagesModified().entrySet()) {
                 final AbstractPage page = this.getOrCreatePage(entry.getKey().x, entry.getKey().y);
-                 redoHistory.pagesModified().put(entry.getKey(), page.unboChanges(entry.getValue()));
+                final NativeImage before = new NativeImage(MapwrightClient.CHUNK_SIZE, MapwrightClient.CHUNK_SIZE, true);
+                before.copyFrom(page.getImage());
+                redoHistory.pagesModified().put(entry.getKey(), page.unboChanges(entry.getValue()));
+                this.queueImageDiff(entry.getKey().x, entry.getKey().y, before, page.getImage());
+                before.close();
             }
 
             this.futureHistories.push(redoHistory);
@@ -103,7 +125,11 @@ public class PageManager {
 
             for (final Map.Entry<Vector2i, NativeImage> entry : recentHistory.pagesModified().entrySet()) {
                 final AbstractPage page = this.getOrCreatePage(entry.getKey().x, entry.getKey().y);
+                final NativeImage before = new NativeImage(MapwrightClient.CHUNK_SIZE, MapwrightClient.CHUNK_SIZE, true);
+                before.copyFrom(page.getImage());
                 undoHistory.pagesModified().put(entry.getKey(), page.unboChanges(entry.getValue()));
+                this.queueImageDiff(entry.getKey().x, entry.getKey().y, before, page.getImage());
+                before.close();
             }
 
             this.pastHistories.push(undoHistory);
@@ -133,6 +159,11 @@ public class PageManager {
      * Absolute world coordinates
      */
     public void putPixel(final int x, final int y, final int RGBA) {
+        final String authorId = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "";
+        this.putPixel(x, y, RGBA, authorId, -1L);
+    }
+
+    public void putPixel(final int x, final int y, final int RGBA, final String authorId, final long strokeId) {
         final int rx = Math.floorDiv(x, MapwrightClient.CHUNK_SIZE);
         final int ry = Math.floorDiv(y, MapwrightClient.CHUNK_SIZE);
 
@@ -146,8 +177,9 @@ public class PageManager {
             this.snapshotPage(newPage);
         }
 
+        final int prev = newPage.getPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE);
         newPage.setPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE, RGBA);
-        MapSyncBridge.queueLocalOperation(x, y, RGBA);
+        MapSyncBridge.queueLocalOperation(x, y, RGBA, prev, authorId, strokeId);
     }
 
     public int getPixelARGB(final int x, final int y) {
@@ -157,9 +189,13 @@ public class PageManager {
     }
 
     public void putSquare(final int x, final int y, final int RGBA, final int r) {
+        this.putSquare(x, y, RGBA, r, Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "", -1L);
+    }
+
+    public void putSquare(final int x, final int y, final int RGBA, final int r, final String authorId, final long strokeId) {
         for (int i = -r + x; i <= r + x; i++) {
             for (int j = -r + y; j <= r + y; j++) {
-                this.putPixel(i, j, RGBA);
+                this.putPixel(i, j, RGBA, authorId, strokeId);
             }
         }
     }
@@ -243,10 +279,12 @@ public class PageManager {
 
     public void putPin(final Pin.Type type, final Vector2dc pos) {
         this.pins.computeIfAbsent(type, Pin::new).setPosition(pos);
+        PinSyncBridge.queuePut(type, pos.x(), pos.y());
     }
 
     public void removePin(final Pin.Type type) {
         this.pins.remove(type);
+        PinSyncBridge.queueRemove(type);
     }
 
     public SpyglassPins getSpyglassPins() {
