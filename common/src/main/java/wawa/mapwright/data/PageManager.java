@@ -262,11 +262,12 @@ public class PageManager {
     }
 
     private int cleanupTimer = 0;
+    private int pinSyncTimer = 0;
 
     public void tick() {
         final long rendertime = Util.getMillis();
         if (--this.cleanupTimer < 0) {
-            this.cleanupTimer = 20 * 10;
+            this.cleanupTimer = 20;
             final Iterator<AbstractPage> it = this.pages.values().iterator();
             while (it.hasNext()) {
                 final AbstractPage page = it.next();
@@ -287,6 +288,11 @@ public class PageManager {
             }
         }
         this.spyglassPins.tick();
+        if (this.pageIO != null && --this.pinSyncTimer < 0) {
+            this.pinSyncTimer = 10;
+            this.pageIO.savePins(this.pins);
+        }
+
     }
 
     public void save(final boolean close) {

@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 import org.joml.*;
 import org.lwjgl.glfw.GLFW;
 import wawa.mapwright.Helper;
@@ -113,8 +112,16 @@ public class MapWidget extends AbstractWidget {
             pin.pin().draw(guiGraphics, mouseScreen, xOff, yOff, scale, false, transformedScreenBounds);
         }
 
-        final Vec3 playerPos = Minecraft.getInstance().player.position();
-        Rendering.renderHead(guiGraphics, new Vector2d(playerPos.x, playerPos.z), mouseScreen, xOff, yOff, scale, transformedScreenBounds);
+        if (Minecraft.getInstance().level != null) {
+            Minecraft.getInstance().level.players().forEach(player -> {
+                if (player instanceof net.minecraft.client.player.AbstractClientPlayer clientPlayer) {
+                    final Vector2d pos = new Vector2d(player.getX(), player.getZ()).add(xOff, yOff).mul(scale);
+                    Helper.clampWithin(pos, transformedScreenBounds);
+                    final float alpha = Helper.getMouseProximityFade(mouseScreen, pos, 35);
+                    Rendering.renderPlayerIcon(guiGraphics, pos.x - 8, pos.y - 8, clientPlayer, alpha);
+                }
+            });
+        }
 
         guiGraphics.pose().popPose();
     }
