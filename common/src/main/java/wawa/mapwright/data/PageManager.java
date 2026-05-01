@@ -258,7 +258,6 @@ public class PageManager {
     public void reloadPageIO(final Level level, final Minecraft client) {
         this.pageIO = new PageIO(level, client);
         this.pins.clear();
-        this.pins.putAll(this.pageIO.readPins());
     }
 
     private int cleanupTimer = 0;
@@ -294,7 +293,6 @@ public class PageManager {
             for (final AbstractPage page : this.pages.values()) {
                 page.save(this.pageIO, close);
             }
-            this.pageIO.savePins(this.pins);
         }
     }
 
