@@ -7,6 +7,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingIn;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -26,6 +27,11 @@ public class ClientEventsRuntime {
         if (event.getLevel() instanceof final ClientLevel level) {
             ClientEvents.loadLevel(level, Minecraft.getInstance());
         }
+    }
+
+    @SubscribeEvent
+    public static void joinServer(final LoggingIn event) {
+        ClientEvents.join(Minecraft.getInstance().level, Minecraft.getInstance());
     }
 
     @SubscribeEvent

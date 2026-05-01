@@ -144,6 +144,7 @@ public class PageManager {
         this.snapshotPage(newPage);
 
         newPage.setPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE, RGBA);
+        MapwrightClient.MAP_SYNC.stageLocalPixelDiff(x, y, RGBA);
     }
 
     public int getPixelARGB(final int x, final int y) {

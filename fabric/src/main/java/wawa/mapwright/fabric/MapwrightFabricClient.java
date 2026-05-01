@@ -11,15 +11,19 @@ import wawa.mapwright.ClientEvents;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.config.MapwrightClientConfig;
 import wawa.mapwright.fabric.input.FabricKeyMappings;
+import wawa.mapwright.fabric.network.FabricMapSyncTransport;
 
 public final class MapwrightFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         MapwrightClient.init();
 
+        MapwrightClient.MAP_SYNC_TRANSPORT = new FabricMapSyncTransport();
+        MapwrightClient.MAP_SYNC_TRANSPORT.register();
+
         FabricKeyMappings.init();
         ClientTickEvents.END_CLIENT_TICK.register(ClientEvents::tick);
-//        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientEvents.join(client.level, client));
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientEvents.join(client.level, client));
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, level) -> ClientEvents.loadLevel(level, client));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientEvents.leaveServer());
         WorldRenderEvents.AFTER_ENTITIES.register(ctx -> ClientEvents.postWorldRender(ctx.consumers(), ctx.matrixStack(), ctx.tickCounter().getRealtimeDeltaTicks()));
