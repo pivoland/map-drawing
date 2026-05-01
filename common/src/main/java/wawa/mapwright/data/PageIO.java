@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import wawa.mapwright.MapwrightClient;
+import wawa.mapwright.mixin.BiomeManagerAccessor;
 import wawa.mapwright.mixin.MinecraftServerAccessor;
 import wawa.mapwright.mixin.MultiPlayerGameModeAccessor;
 
@@ -40,6 +41,7 @@ public class PageIO {
     private Path buildMapPath(final Level level, final Minecraft client) {
         Path path = client.gameDirectory.toPath()
                 .resolve(mapName);
+        final long seed = ((BiomeManagerAccessor) level.getBiomeManager()).getBiomeZoomSeed();
         if (client.isLocalServer()) {
             path = path.resolve("singleplayer")
                     // [level_path], e.g. level name "Awa/\:waw" -> "Awa___waw"
@@ -49,8 +51,9 @@ public class PageIO {
                     // [server_ip], e.g. "127.0.0.1:25565" -> "127.0.0.1_25565"
                     .resolve(((MultiPlayerGameModeAccessor)client.gameMode).getConnection().getServerData().ip.replace(":", "_"));
         }
-        // Use only dimension id so every client connected to the same host resolves to the same map cache path.
-        return path.resolve(level.dimension().location().toDebugFileName());
+        // minecraft_overworld_123456789
+        // (not actual level seed, clientside seed for visual randomization)
+        return path.resolve(level.dimension().location().toDebugFileName() + "_" + seed);
     }
 
     public Path getPagePath() {
