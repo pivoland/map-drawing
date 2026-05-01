@@ -22,9 +22,7 @@ public class InputListener {
 
             minecraft.level.playLocalSound(Minecraft.getInstance().player, SoundEvents.BOOK_PAGE_TURN, SoundSource.MASTER, 0.5f, 1.0f);
 
-            if (MapwrightClient.PAGE_MANAGER.pageIO.getPagePath().endsWith("_0")) {
-                MapwrightClient.PAGE_MANAGER.reloadPageIO(minecraft.level, minecraft);
-            }
+            MapwrightClient.PAGE_MANAGER.reloadPageIO(minecraft.level, minecraft);
 
             if (minecraft.player.isScoping()) {
                 Vector3d target = getEndingPosition(minecraft.player);

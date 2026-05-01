@@ -35,9 +35,6 @@ public class PageIO {
         }
     }
 
-    /**
-     * @return "minecraftinstance/mapwright_maps/singleplayer/uuid_worldname"
-     */
     private Path buildMapPath(final Level level, final Minecraft client) {
         Path path = client.gameDirectory.toPath()
                 .resolve(mapName);
