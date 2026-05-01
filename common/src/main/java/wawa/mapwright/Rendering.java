@@ -8,7 +8,7 @@ import foundry.veil.api.client.render.rendertype.VeilRenderType;
 import foundry.veil.api.client.render.shader.uniform.ShaderUniform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -50,7 +50,7 @@ public class Rendering {
 		Rendering.renderPlayerIcon(guiGraphics, pos.x - 8, pos.y - 8, Minecraft.getInstance().player, alpha);
 	}
 
-	public static void renderPlayerIcon(final GuiGraphics graphics, final double x, final double y, final LocalPlayer player, final float alpha) {
+	public static void renderPlayerIcon(final GuiGraphics graphics, final double x, final double y, final AbstractClientPlayer player, final float alpha) {
 		final ResourceLocation skinTexture = player.getSkin().texture();
 
 		final RenderType renderType = VeilRenderType.get(RenderTypes.UV_REMAP, skinTexture, Textures.HEAD_ICON);
