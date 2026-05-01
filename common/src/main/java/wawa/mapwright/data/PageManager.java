@@ -267,7 +267,7 @@ public class PageManager {
         for (int i = -r + x; i <= r + x; i++) {
             for (int j = -r + y; j <= r + y; j++) {
                 if (shouldReplace.test(this.getPixelARGB(i, j))) {
-                    this.putPixel(i, j, RGBA, authorId, strokeId);
+                    this.putPixel(i, j, RGBA);
                 }
             }
         }
