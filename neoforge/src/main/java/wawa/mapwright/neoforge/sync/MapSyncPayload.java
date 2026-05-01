@@ -13,25 +13,18 @@ import java.util.List;
 public record MapSyncPayload(List<MapSyncOperation> operations) implements CustomPacketPayload {
     public static final Type<MapSyncPayload> TYPE = new Type<>(MapwrightClient.id("map_sync"));
 
-    private static final StreamCodec<ByteBuf, MapSyncOperation> OP_CODEC = StreamCodec.composite(
+    public static final StreamCodec<ByteBuf, MapSyncOperation> OP_CODEC = StreamCodec.composite(
             ByteBufCodecs.VAR_INT, MapSyncOperation::x,
             ByteBufCodecs.VAR_INT, MapSyncOperation::y,
             ByteBufCodecs.INT, MapSyncOperation::rgba,
+            ByteBufCodecs.STRING_UTF8, MapSyncOperation::authorId,
+            ByteBufCodecs.VAR_LONG, MapSyncOperation::strokeId,
             MapSyncOperation::new
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MapSyncPayload> STREAM_CODEC = StreamCodec.composite(
-            OP_CODEC.apply(ByteBufCodecs.list()),
-            MapSyncPayload::operations,
-            MapSyncPayload::new
+            OP_CODEC.apply(ByteBufCodecs.list()), MapSyncPayload::operations, MapSyncPayload::new
     );
 
-    public MapSyncPayload {
-        operations = List.copyOf(operations);
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 }

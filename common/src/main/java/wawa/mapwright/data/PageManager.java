@@ -133,6 +133,11 @@ public class PageManager {
      * Absolute world coordinates
      */
     public void putPixel(final int x, final int y, final int RGBA) {
+        final String authorId = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getUUID().toString() : "";
+        this.putPixel(x, y, RGBA, authorId, -1L);
+    }
+
+    public void putPixel(final int x, final int y, final int RGBA, final String authorId, final long strokeId) {
         final int rx = Math.floorDiv(x, MapwrightClient.CHUNK_SIZE);
         final int ry = Math.floorDiv(y, MapwrightClient.CHUNK_SIZE);
 
@@ -147,7 +152,7 @@ public class PageManager {
         }
 
         newPage.setPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE, RGBA);
-        MapSyncBridge.queueLocalOperation(x, y, RGBA);
+        MapSyncBridge.queueLocalOperation(x, y, RGBA, authorId, strokeId);
     }
 
     public int getPixelARGB(final int x, final int y) {
