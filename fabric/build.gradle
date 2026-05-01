@@ -8,6 +8,8 @@ plugins {
 def generatedResources = project(":common").file("src/generated/resources")
 def commonResources = project(":common").file("src/main/resources")
 def changelogFile = rootProject.file("Changelog.md")
+def modrinthToken = (providers.gradleProperty("mapwrightPushTokenModrinth").orNull ?: System.getenv("MAPWRIGHT_PUSH_TOKEN_MODRINTH") ?: "")
+def curseforgeToken = (providers.gradleProperty("mapwrightPushTokenCurse").orNull ?: System.getenv("MAPWRIGHT_PUSH_TOKEN_CURSE") ?: "")
 
 repositories {
     flatDir { dir 'libs' }
@@ -73,15 +75,19 @@ publishMods {
     file = remapJar.archiveFile
     modLoaders.add('fabric')
 
-    modrinth {
-        accessToken = (project.findProperty("mapwrightPushTokenModrinth") ?: "")
-        projectId = "iDYmMWwn"
-        minecraftVersions.add(minecraft_version)
+    if (!modrinthToken.isEmpty()) {
+        modrinth {
+            accessToken = modrinthToken
+            projectId = "iDYmMWwn"
+            minecraftVersions.add(minecraft_version)
+        }
     }
 
-    curseforge {
-        accessToken = (project.findProperty("mapwrightPushTokenCurse") ?: "")
-        projectId = "1361711"
-        minecraftVersions.add(minecraft_version)
+    if (!curseforgeToken.isEmpty()) {
+        curseforge {
+            accessToken = curseforgeToken
+            projectId = "1361711"
+            minecraftVersions.add(minecraft_version)
+        }
     }
 }
