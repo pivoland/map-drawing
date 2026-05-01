@@ -16,6 +16,7 @@ import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.Rendering;
 import wawa.mapwright.data.Pin;
 import wawa.mapwright.data.SpyglassPins;
+import wawa.mapwright.data.sync.PlayerIconSyncBridge;
 import wawa.mapwright.map.MapScreen;
 import wawa.mapwright.map.background.MapBackground;
 import wawa.mapwright.map.tool.PanTool;
@@ -115,6 +116,10 @@ public class MapWidget extends AbstractWidget {
 
         final Vec3 playerPos = Minecraft.getInstance().player.position();
         Rendering.renderHead(guiGraphics, new Vector2d(playerPos.x, playerPos.z), mouseScreen, xOff, yOff, scale, transformedScreenBounds);
+        for (final PlayerIconSyncBridge.RemotePlayerIcon icon : PlayerIconSyncBridge.getAll()) {
+            if (icon.playerId().equals(Minecraft.getInstance().player.getUUID())) continue;
+            Pin.DEFAULT.draw(guiGraphics, icon.pos().x + xOff, icon.pos().y + yOff, false, true, 0.9f);
+        }
 
         guiGraphics.pose().popPose();
     }

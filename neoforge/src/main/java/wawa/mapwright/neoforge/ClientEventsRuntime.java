@@ -21,6 +21,7 @@ public class ClientEventsRuntime {
     public static void clientTick(final ClientTickEvent.Post event) {
         ClientEvents.tick(Minecraft.getInstance());
         MapSyncNetworking.flushClientPending();
+        MapSyncNetworking.sendLocalPlayerIcon();
     }
 
     @SubscribeEvent

@@ -98,7 +98,7 @@ public class DrawTool extends Tool {
 
     private void pixelLine(final Vector2d point1, final Vector2d point2, final Consumer<Vector2i> perPixel) {
         final Vector2d delta = new Vector2d(point1).sub(point2);
-        final double density = Math.max(1d, (this.r + 1) * 0.5d);
+        final double density = Math.max(1.5d, (this.r + 1) * 1.75d);
         final int steps = (int) Math.max(1, Math.ceil(Math.max(Math.abs(delta.x), Math.abs(delta.y)) * density));
         delta.div(steps);
         final Vector2d pos = new Vector2d(point2);

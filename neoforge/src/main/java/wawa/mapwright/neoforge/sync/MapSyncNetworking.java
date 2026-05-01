@@ -13,6 +13,7 @@ import wawa.mapwright.data.PageIO;
 import wawa.mapwright.data.sync.MapSyncBridge;
 import wawa.mapwright.data.sync.MapSyncOperation;
 import wawa.mapwright.data.sync.PinSyncBridge;
+import wawa.mapwright.data.sync.PlayerIconSyncBridge;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public final class MapSyncNetworking {
     private static final ServerMapState SERVER_STATE = new ServerMapState();
     private static final int CHUNK_SIZE = 1024;
     private static final int CLIENT_BATCH = 768;
-    private static final int DEBOUNCE_MS = 35;
+    private static final int DEBOUNCE_MS = 0;
     private static boolean serverBootstrapped;
 
     @SubscribeEvent
@@ -32,6 +33,7 @@ public final class MapSyncNetworking {
         registrar.playBidirectional(MapSyncPayload.TYPE, MapSyncPayload.STREAM_CODEC, MapSyncNetworking::handleMapSync);
         registrar.playBidirectional(PinSyncPayload.TYPE, PinSyncPayload.STREAM_CODEC, MapSyncNetworking::handlePinSync);
         registrar.playToServer(C2SRequestFullStatePayload.TYPE, C2SRequestFullStatePayload.STREAM_CODEC, MapSyncNetworking::handleFullRequest);
+        registrar.playBidirectional(PlayerIconPayload.TYPE, PlayerIconPayload.STREAM_CODEC, MapSyncNetworking::handlePlayerIcon);
         registrar.playToClient(S2CFullStateChunkedPayload.TYPE, S2CFullStateChunkedPayload.STREAM_CODEC, (payload, ctx) -> ctx.enqueueWork(() -> MapSyncBridge.applyRemoteOperations(payload.operations())));
         registrar.playToClient(S2CPageDiffBatchPayload.TYPE, S2CPageDiffBatchPayload.STREAM_CODEC, (payload, ctx) -> ctx.enqueueWork(() -> MapSyncBridge.applyRemoteOperations(payload.operations())));
     }
@@ -61,6 +63,7 @@ public final class MapSyncNetworking {
         if (context.player() instanceof ServerPlayer sp) {
             bootstrapServerState();
             SERVER_STATE.apply(payload.operations());
+            if (!payload.operations().isEmpty()) PacketDistributor.sendToAllPlayers(new S2CPageDiffBatchPayload(payload.operations()));
             flushServerDiffs(sp);
             return;
         }
@@ -69,10 +72,19 @@ public final class MapSyncNetworking {
 
     private static void handlePinSync(final PinSyncPayload payload, final IPayloadContext context) {
         if (context.player() instanceof ServerPlayer sp) {
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, payload);
+            PacketDistributor.sendToAllPlayers(payload);
             return;
         }
         context.enqueueWork(() -> PinSyncBridge.applyRemote(payload.operations()));
+    }
+
+
+    private static void handlePlayerIcon(final PlayerIconPayload payload, final IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer) {
+            PacketDistributor.sendToAllPlayers(payload);
+            return;
+        }
+        context.enqueueWork(() -> PlayerIconSyncBridge.update(payload.playerId(), payload.x(), payload.z(), payload.yaw()));
     }
 
     private static void handleFullRequest(final C2SRequestFullStatePayload payload, final IPayloadContext context) {
@@ -98,6 +110,14 @@ public final class MapSyncNetworking {
         if (!pinOps.isEmpty()) PacketDistributor.sendToServer(new PinSyncPayload(pinOps));
     }
 
+
+    public static void sendLocalPlayerIcon() {
+        final Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.getConnection() == null) return;
+        final var p = mc.player;
+        PacketDistributor.sendToServer(new PlayerIconPayload(p.getUUID(), p.getX(), p.getZ(), p.getYRot()));
+    }
+
     public static void requestSnapshot() {
         final Minecraft mc = Minecraft.getInstance();
         if (mc.player != null && mc.getConnection() != null) PacketDistributor.sendToServer(new C2SRequestFullStatePayload());
@@ -108,6 +128,6 @@ public final class MapSyncNetworking {
         if (!SERVER_STATE.shouldFlush(now, CHUNK_SIZE, DEBOUNCE_MS)) return;
         final var diffs = SERVER_STATE.drainDiffs();
         SERVER_STATE.markFlushed(now);
-        if (!diffs.isEmpty()) PacketDistributor.sendToPlayersTrackingEntityAndSelf(source, new S2CPageDiffBatchPayload(diffs));
+        if (!diffs.isEmpty()) PacketDistributor.sendToAllPlayers(new S2CPageDiffBatchPayload(diffs));
     }
 }
