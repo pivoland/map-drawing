@@ -74,6 +74,9 @@ sourceSets.main.resources {
     srcDir generatedResources.absolutePath
 }
 
+def modrinthToken = providers.gradleProperty("mapwrightPushTokenModrinth").orNull
+def curseToken = providers.gradleProperty("mapwrightPushTokenCurse").orNull
+
 publishMods {
 //    dryRun = true
     type = STABLE
@@ -83,15 +86,19 @@ publishMods {
     file = jar.archiveFile
     modLoaders.add('neoforge')
 
-    modrinth {
-        accessToken = mapwrightPushTokenModrinth
+    if (modrinthToken) {
+        modrinth {
+            accessToken = modrinthToken
         projectId = "iDYmMWwn"
-        minecraftVersions.add(minecraft_version)
+            minecraftVersions.add(minecraft_version)
+        }
     }
 
-    curseforge {
-        accessToken = mapwrightPushTokenCurse
+    if (curseToken) {
+        curseforge {
+            accessToken = curseToken
         projectId = "1361711"
-        minecraftVersions.add(minecraft_version)
+            minecraftVersions.add(minecraft_version)
+        }
     }
 }

@@ -13,11 +13,16 @@ public class ClientEvents {
         MapwrightClient.PAGE_MANAGER.tick();
         MapwrightClient.STAMP_HANDLER.tick();
         MapwrightClient.TOOL_MANAGER.get().tick(client.screen instanceof MapScreen);
+        MapwrightClient.MAP_SYNC.tick();
     }
 
     public static void loadLevel(final Level level, final Minecraft client) {
         MapwrightClient.PAGE_MANAGER.saveAndClear();
         MapwrightClient.PAGE_MANAGER.reloadPageIO(level, client);
+    }
+
+    public static void join(final Level level, final Minecraft client) {
+        MapwrightClient.MAP_SYNC.onClientJoin(client);
     }
 
     public static void leaveServer() {

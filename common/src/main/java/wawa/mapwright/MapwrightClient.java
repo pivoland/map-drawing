@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import wawa.mapwright.data.PageManager;
 import wawa.mapwright.map.stamp_bag.StampBagHandler;
 import wawa.mapwright.map.tool.PanTool;
+import wawa.mapwright.network.IMapSyncTransport;
+import wawa.mapwright.network.MapSyncCoordinator;
 import wawa.mapwright.map.tool.ToolManager;
 import wawa.mapwright.platform.MapWrightServices;
 
@@ -18,6 +20,12 @@ public final class MapwrightClient {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static PageManager PAGE_MANAGER = new PageManager();
     public static ToolManager TOOL_MANAGER = new ToolManager(PanTool.INSTANCE);
+    public static MapSyncCoordinator MAP_SYNC = new MapSyncCoordinator();
+    public static IMapSyncTransport MAP_SYNC_TRANSPORT = new IMapSyncTransport() {
+        @Override public void register() {}
+        @Override public boolean isServerMapwrightAvailable() { return false; }
+        @Override public void sendToServer(final wawa.mapwright.network.MapSyncPacket packet) {}
+    };
     private static boolean DH_PRESENT = false;
 	private static Boolean SABLE_PRESENT = null;
 
